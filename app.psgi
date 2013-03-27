@@ -6,6 +6,7 @@ use File::Basename;
 use lib File::Spec->catdir(dirname(__FILE__), 'extlib', 'lib', 'perl5');
 use lib File::Spec->catdir(dirname(__FILE__), 'lib');
 use Amon2::Lite;
+use MetaCPAN::API::Tiny;
 
 our $VERSION = '0.01';
 
@@ -24,45 +25,46 @@ sub load_config {
     }
 }
 
+my $mcpan = MetaCPAN::API::Tiny->new(
+    ua_args => [
+        timeout => 7
+    ],
+);
+
 get '/' => sub {
     my $c = shift;
-    return $c->render('index.tt');
+
+    my $q = $c->req->param('q');
+    my $result;
+    if ($q) {
+        $result = $mcpan->post(
+            'module',
+            {
+                query  => { match_all => {} },
+                filter => { prefix    => { 'module.name' => $q } },
+                size => 10,
+            },
+        );
+        use Data::Dumper; warn Dumper($result);
+    }
+    return $c->render('index.tt', {
+        result => $result,
+    });
 };
 
 # load plugins
-__PACKAGE__->load_plugin('Web::CSRFDefender');
+__PACKAGE__->load_plugin('Web::CSRFDefender', {
+    post_only => 1,
+});
 # __PACKAGE__->load_plugin('DBI');
-# __PACKAGE__->load_plugin('Web::FillInFormLite');
-# __PACKAGE__->load_plugin('Web::JSON');
+__PACKAGE__->load_plugin('Web::FillInFormLite');
+__PACKAGE__->load_plugin('Web::JSON');
 
 __PACKAGE__->enable_session();
 
 __PACKAGE__->to_app(handle_static => 1);
 
 __DATA__
-
-@@ index.tt
-<!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>MFPM</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
-    <script type="text/javascript" src="[% uri_for('/static/js/main.js') %]"></script>
-    <link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css">
-    <link rel="stylesheet" href="[% uri_for('/static/css/main.css') %]">
-</head>
-<body>
-    <div class="container">
-        <header><h1>MFPM</h1></header>
-        <section class="row">
-            This is a MFPM
-        </section>
-        <footer>Powered by <a href="http://amon.64p.org/">Amon2::Lite</a></footer>
-    </div>
-</body>
-</html>
 
 @@ /static/js/main.js
 
