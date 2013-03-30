@@ -1,0 +1,9 @@
+[% WRAPPER '_layout.tt' %]
+
+<h1>[% name %] - <a href="/">MFPM</a></h1>
+
+<div class="row">
+Under construction...
+</div>
+
+[% END %]

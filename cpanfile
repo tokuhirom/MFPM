@@ -5,6 +5,7 @@ requires 'MetaCPAN::API::Tiny';
 requires 'Plack::Session', '0.14';
 requires 'Text::Xslate', '1.5006';
 requires 'perl', '5.008001';
+requires 'Amon2::Auth';
 
 on configure => sub {
     requires 'ExtUtils::MakeMaker';
